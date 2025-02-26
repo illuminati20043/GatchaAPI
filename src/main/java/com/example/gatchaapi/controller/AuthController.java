@@ -1,5 +1,6 @@
 package com.example.gatchaapi.controller;
 
+import com.example.gatchaapi.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,5 +22,11 @@ public class AuthController {
     public ResponseEntity<Boolean> validate(@RequestParam String token) {
         boolean isValid = authService.validateToken(token);
         return ResponseEntity.ok(isValid);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<User> register(@RequestParam String username, @RequestParam String password) {
+        User user = authService.registerUser(username, password);
+        return ResponseEntity.ok(user);
     }
 }

@@ -40,6 +40,16 @@ public class AuthService {
         return false;
     }
 
+    public User registerUser(String username, String password) {
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        return userRepository.save(user);
+    }
+
     private String generateToken(String username) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm:ss");
         String dateTime = LocalDateTime.now().format(formatter);
