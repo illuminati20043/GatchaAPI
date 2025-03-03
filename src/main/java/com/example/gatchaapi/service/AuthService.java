@@ -2,12 +2,12 @@ package com.example.gatchaapi.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
-import java.util.UUID;
 import com.example.gatchaapi.model.User;
 import com.example.gatchaapi.repository.UserRepository;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -17,12 +17,18 @@ public class AuthService {
     public String authenticate(String username, String password) {
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isPresent() && userOpt.get().getPassword().equals(password)) {
-            String token = generateToken(username);
             User user = userOpt.get();
-            user.setToken(token);
-            user.setTokenExpiration(LocalDateTime.now().plusHours(1));
-            userRepository.save(user);
-            return token;
+            if (user.getTokenExpiration() != null && user.getTokenExpiration().isAfter(LocalDateTime.now())) {
+                // Token is still valid, return the existing token
+                return user.getToken();
+            } else {
+                // Token has expired or does not exist, generate a new token
+                String token = generateToken();
+                user.setToken(token);
+                user.setTokenExpiration(LocalDateTime.now().plusHours(1));
+                userRepository.save(user);
+                return token;
+            }
         }
         throw new RuntimeException("Invalid credentials");
     }
@@ -50,9 +56,7 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    private String generateToken(String username) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd-HH:mm:ss");
-        String dateTime = LocalDateTime.now().format(formatter);
-        return username + "-" + dateTime + "-" + UUID.randomUUID().toString();
+    private String generateToken() {
+        return UUID.randomUUID().toString();
     }
 }
